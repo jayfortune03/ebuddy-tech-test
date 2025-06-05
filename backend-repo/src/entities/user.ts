@@ -1,5 +1,10 @@
 export interface User {
   id?: string;
   name: string;
-  email: string;
+  userName: string;
+  passwordHash: string;
+  totalAverageWeightRatings: number;
+  numberOfRents: number;
+  recentlyActive: number;
+  token: string;
 }

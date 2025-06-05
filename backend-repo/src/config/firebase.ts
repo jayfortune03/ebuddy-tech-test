@@ -1,14 +1,14 @@
-import admin from "firebase-admin";
+import admin, { ServiceAccount } from "firebase-admin";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-  });
-}
+import serviceAccount from "./nick-1881e-firebase-adminsdk-fbsvc-3b06eda798.json";
 
-const db = admin.firestore();
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount as string | ServiceAccount),
+});
 
-export { admin, db };
+const firestore = admin.firestore();
+
+export default firestore;

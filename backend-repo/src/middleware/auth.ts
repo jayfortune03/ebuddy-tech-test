@@ -1,5 +1,22 @@
-import { Request, Response, NextFunction } from "express";
-import { admin } from "../config/firebase";
+import { NextFunction, Request, Response } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { getUserById } from "../repository/userCollection";
+import { AppError } from "../utils/errorHandler";
+
+const verifyAccessToken = (accessToken: string | undefined) => {
+  try {
+    if (!accessToken) throw "Token Expired";
+    const payload = jwt.verify(
+      accessToken,
+      process.env.JWT_SECRET_KEY!
+    ) as JwtPayload;
+    return payload;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError || error === "Token Expired")
+      throw new AppError("Token Expired", 401);
+    throw error;
+  }
+};
 
 export const authMiddleware = async (
   req: Request,
@@ -9,16 +26,17 @@ export const authMiddleware = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Unauthorized" });
-    return; // avoid returning Response
+    throw new AppError("Unauthorized", 401);
   }
 
-  const token = authHeader.split("Bearer ")[1];
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    (req as any).uid = decodedToken.uid;
-    next(); // properly continue
+    const token = authHeader.split("Bearer ")[1];
+    const { id } = verifyAccessToken(token);
+    const user = await getUserById(id);
+    if (!user || user.token !== token)
+      throw new AppError("Token is invalid!", 401);
+    next();
   } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
+    next(error);
   }
 };

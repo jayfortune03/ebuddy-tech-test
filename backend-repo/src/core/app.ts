@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import userRoutes from "../routes/user.routes";
 import dotenv from "dotenv";
+import { errorHandler } from "../utils/errorHandler";
 
 dotenv.config();
 
@@ -20,5 +21,6 @@ app.get("/api/hello", (req, res) => {
 });
 
 app.use("/api", userRoutes);
+app.use(errorHandler);
 
 export default app;
