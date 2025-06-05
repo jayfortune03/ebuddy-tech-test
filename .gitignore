@@ -1,4 +1,2 @@
-/node_modules
-firebase-adminsdk.json
-.env
+/backend-repo/.env
 nick-1881e-firebase-adminsdk-fbsvc-3b06eda798
