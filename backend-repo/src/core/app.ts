@@ -3,6 +3,7 @@ import cors from "cors";
 import userRoutes from "../routes/user.routes";
 import dotenv from "dotenv";
 import { errorHandler } from "../utils/errorHandler";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -14,10 +15,11 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json());
 
-app.get("/api/hello", (req, res) => {
-  res.json({ message: "Hello from Modular Express Firebase Server!" });
+app.get("/~health", (req, res) => {
+  res.json({ message: "Server is Online & Healthy!" });
 });
 
 app.use("/api", userRoutes);

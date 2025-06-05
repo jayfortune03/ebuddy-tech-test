@@ -23,18 +23,13 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new AppError("Unauthorized", 401);
-  }
-
   try {
-    const token = authHeader.split("Bearer ")[1];
+    const token = req.cookies.token;
     const { id } = verifyAccessToken(token);
     const user = await getUserById(id);
     if (!user || user.token !== token)
       throw new AppError("Token is invalid!", 401);
+
     next();
   } catch (error) {
     next(error);
