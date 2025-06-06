@@ -1,4 +1,3 @@
-// errorHandler.ts
 import { Request, Response, NextFunction } from "express";
 
 class AppError extends Error {
@@ -9,7 +8,6 @@ class AppError extends Error {
   }
 }
 
-// Error handling middleware
 const errorHandler = (
   err: AppError,
   req: Request,

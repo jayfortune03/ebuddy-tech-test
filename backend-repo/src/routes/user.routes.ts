@@ -1,12 +1,9 @@
 import { Router } from "express";
-import { createUser, listUsers, login, logout } from "../controller/api";
-import { authMiddleware } from "../middleware/auth";
+import { listUsers, updateUser } from "../controller/users.controller";
 
-const router = Router();
+const userRouter = Router();
 
-router.post("/users", authMiddleware, createUser);
-router.get("/users", authMiddleware, listUsers);
-router.post("/login", login);
-router.post("/logout", logout);
+userRouter.put("/update-user-data/:id", updateUser);
+userRouter.get("/fetch-user-data", listUsers);
 
-export default router;
+export default userRouter;

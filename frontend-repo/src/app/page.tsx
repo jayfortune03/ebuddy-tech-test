@@ -1,85 +1,141 @@
 "use client";
 
-import { Box, Button, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Stack,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import MenuButton from "./components/reload-button";
+import UserTable from "./components/user-table";
 import axiosInstance from "./lib/axios";
-
-import { useRouter } from "next/navigation";
+import { RootState } from "./store";
 import {
   fetchUsersFailure,
   fetchUsersStart,
   fetchUsersSuccess,
-  User,
+  setPage,
+  setRowsPerPage,
 } from "./store/userSlice";
-import { RootState } from "./store";
 
 export default function Home() {
   const dispatch = useDispatch();
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width:600px)");
 
-  const { users, loading, error } = useSelector(
+  const { users, page, rowsPerPage, totalUsers, loading, error } = useSelector(
     (state: RootState) => state.users
   );
 
   useEffect(() => {
     const fetchData = async () => {
-      dispatch(fetchUsersStart()); // Set loading state
+      dispatch(fetchUsersStart());
 
       try {
-        const response = await axiosInstance.get("/users");
-        console.log("Fetched data:", response.data);
-        dispatch(fetchUsersSuccess(response.data)); // Store users in Redux
-      } catch (error) {
-        console.error("Error fetching data", error);
+        const response = await axiosInstance.get(`/user/fetch-user-data`, {
+          params: {
+            page,
+            rowsPerPage,
+          },
+        });
+
+        dispatch(fetchUsersSuccess(response.data.data));
+      } catch (err) {
+        console.error("Error fetching data", err);
         dispatch(fetchUsersFailure("Failed to fetch users"));
       }
     };
 
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, page, rowsPerPage]);
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/logout");
+      await axiosInstance.post("/auth/logout");
       router.replace("/auth/login");
     } catch (err) {
       console.log(
-        `🥶🥶🥶🥶 ~ フ ク ロ ウ handleLogout ~ フ ク ロ ウ err:`,
+        "🥶🥶🥶🥶 ~ フ ク ロ ウ handleLogout ~ フ ク ロ ウ err:",
         err
       );
     }
+  };
+
+  const handleReload = () => {
+    dispatch(setPage(0));
+    dispatch(fetchUsersStart());
+    axiosInstance
+      .get("/fetch-user-data", {
+        params: {
+          page: 0,
+          rowsPerPage,
+        },
+      })
+      .then((response) => {
+        dispatch(fetchUsersSuccess(response.data.data));
+      })
+      .catch((error) => {
+        dispatch(fetchUsersFailure("Failed to reload users"));
+        console.error("Error reloading data", error);
+      });
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    dispatch(setPage(newPage));
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    dispatch(setRowsPerPage(Number(event.target.value)));
+    dispatch(setPage(0));
   };
 
   return (
     <Box
       sx={{
         background: "#F2F3F4",
-        paddingX: "5rem",
-        paddingY: "3rem",
+        paddingX: isMobile ? "2rem" : "5rem",
+        paddingY: isMobile ? "1.5rem" : "3rem",
         width: "100dvw",
         height: "100dvh",
       }}
     >
-      <Typography variant="h4">Users List</Typography>
+      <Stack
+        display={"flex"}
+        direction={"row"}
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Typography variant="h4">Users List</Typography>
+
+        <MenuButton handleLogout={handleLogout} handleReload={handleReload} />
+      </Stack>
 
       {loading ? (
-        <Typography>Loading...</Typography>
+        <CircularProgress />
       ) : error ? (
         <Typography>{error}</Typography>
       ) : users.length > 0 ? (
-        <ul>
-          {users.map((user: User) => (
-            <li key={user.id}>{user.name}</li> // Replace `user.name` with actual data from the response
-          ))}
-        </ul>
+        <>
+          <UserTable
+            users={users}
+            loading={loading}
+            error={error || ""}
+            totalUsers={totalUsers}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+          />
+        </>
       ) : (
         <Typography>No users found</Typography>
       )}
-
-      <Button size="large" onClick={() => handleLogout()}>
-        Logout here
-      </Button>
     </Box>
   );
 }

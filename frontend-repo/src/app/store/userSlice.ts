@@ -1,42 +1,51 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { User } from "../types/user";
+import { UserState } from "../types/userState";
 
-export interface User {
-  id: string;
-  name: string;
-}
-
-interface UsersState {
-  users: User[];
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: UsersState = {
+const initialState: UserState = {
   users: [],
   loading: false,
   error: null,
+  page: 0,
+  rowsPerPage: 5,
+  totalUsers: 0,
 };
 
-const usersSlice = createSlice({
+const userSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
-    fetchUsersStart(state) {
+    fetchUsersStart: (state) => {
       state.loading = true;
       state.error = null;
     },
-    fetchUsersSuccess(state, action: PayloadAction<User[]>) {
-      state.users = action.payload;
+    fetchUsersSuccess: (
+      state,
+      action: PayloadAction<{ users: User[]; totalUsers: number }>
+    ) => {
       state.loading = false;
+      state.users = action.payload.users;
+      state.totalUsers = action.payload.totalUsers;
     },
-    fetchUsersFailure(state, action: PayloadAction<string>) {
-      state.error = action.payload;
+    fetchUsersFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
+      state.error = action.payload;
+    },
+    setPage: (state, action: PayloadAction<number>) => {
+      state.page = action.payload;
+    },
+    setRowsPerPage: (state, action: PayloadAction<number>) => {
+      state.rowsPerPage = action.payload;
     },
   },
 });
 
-export const { fetchUsersStart, fetchUsersSuccess, fetchUsersFailure } =
-  usersSlice.actions;
+export const {
+  fetchUsersStart,
+  fetchUsersSuccess,
+  fetchUsersFailure,
+  setPage,
+  setRowsPerPage,
+} = userSlice.actions;
 
-export default usersSlice.reducer;
+export default userSlice.reducer;

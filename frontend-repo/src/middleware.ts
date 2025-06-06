@@ -17,8 +17,6 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
-
-  // For all other routes, proceed normally
 }
 
 export const config = {
